@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pi Camera Clips</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{--gap:1rem}
+    body{font-family:sans-serif;margin:0;padding:var(--gap);background:#fafafa}
+    h2{margin-top:0}
+    .card{background:#fff;border-radius:12px;box-shadow:0 2px 6px #0001;
+          margin-bottom:var(--gap);padding:var(--gap)}
+    video{width:100%;border-radius:8px;margin-bottom:.5rem}
+    button{padding:.5rem 1rem;border:0;border-radius:8px;font-size:1rem;
+           cursor:pointer}
+  </style>
+</head>
+<body>
+  <h2>Pi Camera Clips</h2>
+  <div id="list"></div>
+
+<script>
+/* -----------------------------------------------------------
+   Figure out the correct API base automatically:
+   – works whether you load the page as http://IP/  (root route)
+   – or as          .../static/index.html
+----------------------------------------------------------- */
+const ORIGIN = location.origin;                 // "http://192.168.0.32:8000"
+const API    = ORIGIN + '/api';                 // "http://192.168.0.32:8000/api"
+
+/* -----------------------------------------------------------
+   Fetch list of videos, then render “cards”
+----------------------------------------------------------- */
+fetch(API + '/videos')
+  .then(r => r.json())
+  .then(show)
+  .catch(err => alert("Could not talk to API:\n" + err));
+
+function show(videos){
+  const list = document.getElementById('list');
+  if (!videos.length){
+    list.innerHTML = "<p>No clips yet.  Upload one and refresh.</p>";
+    return;
+  }
+  videos.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <p>${new Date(v.created_at).toLocaleString()}</p>
+      <video controls preload="metadata"
+             src="${API}/video/${v.slug}/stream#t=0.1"></video>
+      <a href="${API}/video/${v.slug}/download"
+         download="${v.orig_name}">
+        <button>Save to Photos</button>
+      </a>`;
+    list.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>

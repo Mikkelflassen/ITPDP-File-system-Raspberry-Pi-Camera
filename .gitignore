@@ -1,0 +1,11 @@
+# python cache
+__pycache__/
+*.pyc
+
+# venv + runtime data
+venv/
+uploads/
+videos.db
+
+# misc
+.DS_Store
