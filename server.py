@@ -1,9 +1,42 @@
 #!/usr/bin/env python3
 import os, datetime, mimetypes, uuid
 from pathlib import Path
-from flask import Flask, request, jsonify, send_file, abort
+from flask import Flask, render_template, request, jsonify, send_file, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import subprocess, tempfile
+
+def record_and_upload():
+    """
+    Record 5 s H.264 clip with libcamera on the Pi itself,
+    re‑package to mp4, then call upload() internally.
+    """
+    TMP = Path(tempfile.gettempdir())
+    h264 = TMP / "clip.h264"
+    mp4  = TMP / "clip.mp4"
+
+    # 1) capture 5 s
+    subprocess.run([
+        "libcamera-vid", "--width","1280","--height","720",
+        "--codec","h264","-t","5000","-o",str(h264)
+    ], check=True)
+
+    # 2) wrap into mp4
+    subprocess.run(["MP4Box","-add",str(h264),str(mp4)], check=True)
+    h264.unlink()
+
+    # 3) open as Werkzeug FileStorage and re‑use upload() route
+    from werkzeug.datastructures import FileStorage
+    with mp4.open("rb") as fp:
+        file_obj = FileStorage(fp, filename="pi_clip.mp4", content_type="video/mp4")
+        with app.test_request_context(
+            "/api/upload", method="POST",
+            data={"file": file_obj},
+            content_type="multipart/form-data"
+        ):
+            resp, code = upload()
+    mp4.unlink()
+    return resp  # JSON dict from upload()
 
 # ---------- config ----------
 BASE_DIR        = Path(__file__).resolve().parent
@@ -23,34 +56,42 @@ CORS(app)                               # allow phone browser on same subnet
 
 # ---------- model ----------
 class Video(db.Model):
-    id          = db.Column(db.Integer, primary_key=True)
-    slug        = db.Column(db.String,  unique=True, nullable=False)
-    orig_name   = db.Column(db.String,  nullable=False)
-    mime        = db.Column(db.String,  nullable=False)
-    bytes       = db.Column(db.Integer, nullable=False)
-    created_at  = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    id        = db.Column(db.Integer, primary_key=True)
+    slug      = db.Column(db.String, unique=True, nullable=False)
+    orig_name = db.Column(db.String, nullable=False)
+    title     = db.Column(db.String, nullable=True)                 # NEW
+    mime      = db.Column(db.String, nullable=False)
+    bytes     = db.Column(db.Integer, nullable=False)
+    created_at= db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def as_dict(self):
         return dict(
             id=self.id,
             slug=self.slug,
             orig_name=self.orig_name,
+            title=self.title,
             mime=self.mime,
             size=self.bytes,
             created_at=self.created_at.isoformat() + "Z"
-        )
+        )      # ← this closing parenthesis was missing
+
+
 
 # ---------- endpoints ----------
 # ---------- front‑end ----------
 @app.route("/")
-def root():
-    """
-    Serve static/index.html when the browser asks for `/`.
-    Flask automatically looks in the folder called `static`
-    that sits next to this file.
-    """
-    return app.send_static_file("index.html")
+def gallery():
+    return render_template("gallery.html")
 
+# control / record page you uploaded
+@app.route("/control")
+def control():
+    return render_template("front_page.html")   # your uploaded layout
+
+# one‑tap record page
+@app.route("/record")
+def record_page():
+    return render_template("front_page.html")
 
 @app.route("/api/upload", methods=["POST"])
 def upload():
@@ -79,6 +120,16 @@ def list_videos():
     vids = Video.query.order_by(Video.created_at.desc()).all()
     return jsonify([v.as_dict() for v in vids])
 
+@app.route("/api/record", methods=["POST"])
+def record_api():
+    try:
+        new_clip = record_and_upload()   # JSON dict
+        return new_clip, 201
+    except Exception as e:
+        app.logger.exception("record failed")
+        return {"error": str(e)}, 500
+
+
 def _send_range(path, mime):
     """Minimal HTTP Range implementation for smooth mobile scrubbing."""
     range_h = request.headers.get('Range')
@@ -103,6 +154,19 @@ def stream(slug):
     v = Video.query.filter_by(slug=slug).first_or_404()
     path = UPLOAD_DIR / f"{slug}{Path(v.orig_name).suffix}"
     return _send_range(path, v.mime)
+
+# -------- title‑edit endpoint --------
+@app.route("/api/video/<slug>/title", methods=["PATCH"])
+def set_title(slug):
+    data = request.get_json(force=True)
+    new_title = (data.get("title") or "").strip()
+    if not new_title:
+        return {"error": "title required"}, 400
+    v = Video.query.filter_by(slug=slug).first_or_404()
+    v.title = new_title
+    db.session.commit()
+    return v.as_dict()
+
 
 @app.route("/api/video/<slug>/download")
 def download(slug):
