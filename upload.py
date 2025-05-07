@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
 import subprocess, datetime, requests, pathlib, os
 
 SERVER = "http://your-server-ip:8000/api/upload"   # adjust
 CLIP_SEC = 10
 
 def record_clip(tmp="clip.h264"):
-    # Use libcamera-vid (Bullseye) or replace with picamera2 API
     subprocess.check_call([
         "libcamera-vid",
         "-t", str(CLIP_SEC * 1000),

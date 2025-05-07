@@ -4,14 +4,14 @@
   <script defer src="{{ url_for('static', filename='/gallery.js') }}"></script>
   <link rel="stylesheet" href="/static/gallery.css">
 <meta charset="UTF-8">
-<title>Pi Clips</title>
+<title>Pi Clips</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 {% extends "base.html" %}
 {% block body %}
 </head>
 <body>
-<h2>Pi Camera Clips</h2>
+<h2>Pi Camera Clips</h2>
 <div id="rocordButtom">
 <a href="{{ url_for('record_page') }}" >⏺️</a>
 </div>
@@ -28,7 +28,7 @@
     <div class="row">
       <button id="delBtn" style="background:#e53935;color:#fff;">Delete</button>
       <a id="dlLink"><button>Download</button></a>
-      <button onclick="saveTitle()">Save Title</button>
+      <button onclick="saveTitle()">Save Title</button>
       
     </div>
   </div>

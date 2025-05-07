@@ -9,3 +9,5 @@ videos.db
 
 # misc
 .DS_Store
+.idea
+/.idea
