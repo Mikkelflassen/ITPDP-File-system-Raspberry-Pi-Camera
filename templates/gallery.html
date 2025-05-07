@@ -1,36 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script defer src="{{ url_for('static', filename='/gallery.js') }}"></script>
+  <link rel="stylesheet" href="/static/gallery.css">
 <meta charset="UTF-8">
 <title>Pi Clips</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-:root{--gap:1rem}body{font-family:sans-serif;margin:0;background:#f4f4f4}
-h2{padding:var(--gap)}#grid{display:grid;gap:var(--gap);padding:var(--gap)}
-/* first item spans full width */
-#grid > div:first-child{grid-column:1/-1}
-/* two‑up for the rest on phones; auto‑fill on wide screens */
-@media(min-width:300px){
-  #grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
-.card{background:#fff;border-radius:12px;box-shadow:0 2px 6px #0001;overflow:hidden;cursor:pointer}
-.card video{width:100%;display:block}
-.card .meta{padding:.5rem}.meta h4{margin:.3rem 0 0;font-size:.9rem;font-weight:600}
-.dialog{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center}
-.dialog.open{display:flex}
-.dialog-content{background:#fff;border-radius:12px;max-width:600px;width:90%;padding:1rem;display:flex;flex-direction:column;gap:.5rem}
-.dialog video{width:100%;border-radius:8px}
-.dialog input{font-size:1rem;padding:.4rem;border:1px solid #ccc;border-radius:6px;width:100%}
-.dialog button{padding:.5rem 1rem;border:0;border-radius:8px;font-size:1rem;cursor:pointer}
-.dialog .row{display:flex;gap:.5rem;justify-content:flex-end}
-</style>
+
 {% extends "base.html" %}
 {% block body %}
 </head>
 <body>
 <h2>Pi Camera Clips</h2>
-<a href="{{ url_for('record_page') }}" style="position:absolute;right:1rem;top:1rem;
-   font-size:1.7rem;text-decoration:none;">⏺️</a>
-
+<div id="rocordButtom">
+<a href="{{ url_for('record_page') }}" >⏺️</a>
+</div>
 
 <div id="grid"></div>
 
@@ -39,76 +23,18 @@ h2{padding:var(--gap)}#grid{display:grid;gap:var(--gap);padding:var(--gap)}
   <div class="dialog-content" onclick="event.stopPropagation()">
     <video id="dlgVid" playsinline controls></video>
     <input id="dlgTitle" placeholder="Enter title…">
+    
+    
     <div class="row">
+      <button id="delBtn" style="background:#e53935;color:#fff;">Delete</button>
       <a id="dlLink"><button>Download</button></a>
       <button onclick="saveTitle()">Save Title</button>
+      
     </div>
   </div>
 </div>
 
-<script>
-const API = location.origin + '/api';
-let videos=[];
 
-/* -------- fetch list & render cards -------- */
-fetch(API + '/videos').then(r=>r.json()).then(list=>{
-  videos=list;
-  render();
-});
-
-function render(){
-  const g = document.getElementById('grid');
-  g.innerHTML = '';
-  videos.forEach((v,i)=>{
-    const created = new Date(v.created_at)
-          .toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `
-    <video playsinline src="${API}/video/${v.slug}/stream#t=0.1" muted></video>
-      <div class="meta">
-         <h4>${v.title || '<em>Untitled</em>'}</h4>
-         <small>${created}</small>
-      </div>`;
-    div.onclick = () => openDlg(v);
-    g.appendChild(div);
-  });
-}
-
-
-/* -------- dialog helpers -------- */
-function openDlg(v){
-  const dlg=document.getElementById('dlg');
-  dlg.classList.add('open');
-  document.getElementById('dlgVid').src = `${API}/video/${v.slug}/stream`;
-  const t=document.getElementById('dlgTitle');
-  t.value=v.title||'';
-  t.dataset.slug=v.slug;
-  const dl=document.getElementById('dlLink');
-  dl.href=`${API}/video/${v.slug}/download`;
-  dl.download=v.orig_name;
-}
-function closeDlg(ev){
-  if(ev.target.id==='dlg') ev.target.classList.remove('open');
-}
-function saveTitle(){
-  const t=document.getElementById('dlgTitle');
-  fetch(`${API}/video/${t.dataset.slug}/title`,{
-    method:'PATCH',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({title:t.value})
-  }).then(r=>{
-    if(!r.ok) throw Error('fail');return r.json();
-  }).then(updated => {
-      videos = videos.map(v => v.slug === updated.slug ? updated : v);
-      render();
-      closeDlg({target:{id:'dlg'}});
-  })
-  .catch(err => {
-      console.error("Title save failed:", err);     // silent in UI
-  });
-}
-</script>
 {% endblock %}
 </body>
 </html>

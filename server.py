@@ -1,42 +1,43 @@
-#!/usr/bin/env python3
+import time
+import random
 import os, datetime, mimetypes, uuid
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, send_file, abort
+from flask import Flask, render_template, request, jsonify, send_file, abort, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import subprocess, tempfile
+from paho.mqtt import client as mqtt_client
 
-def record_and_upload():
-    """
-    Record 5 s H.264 clip with libcamera on the Pi itself,
-    re‑package to mp4, then call upload() internally.
-    """
-    TMP = Path(tempfile.gettempdir())
-    h264 = TMP / "clip.h264"
-    mp4  = TMP / "clip.mp4"
+# MQTT setup
+broker = 'broker.emqx.io'
+port = 1883
+topic = "au-itpdp-group3-2025"
+client_id = f'publish-{random.randint(0, 1000)}'
 
-    # 1) capture 5 s
-    subprocess.run([
-        "libcamera-vid", "--width","1280","--height","720",
-        "--codec","h264","-t","5000","-o",str(h264)
-    ], check=True)
+# Connect function
+def connect_mqtt():
+    def on_connect(client, userdata, flags, rc, properties):
+        if rc == 0:
+            print("Connected to MQTT Broker!")
+        else:
+            print("Failed to connect, return code %d\n", rc)
 
-    # 2) wrap into mp4
-    subprocess.run(["MP4Box","-add",str(h264),str(mp4)], check=True)
-    h264.unlink()
+    client = mqtt_client.Client(client_id=client_id, callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+    client.on_connect = on_connect
+    client.connect(broker, port)
+    return client
 
-    # 3) open as Werkzeug FileStorage and re‑use upload() route
-    from werkzeug.datastructures import FileStorage
-    with mp4.open("rb") as fp:
-        file_obj = FileStorage(fp, filename="pi_clip.mp4", content_type="video/mp4")
-        with app.test_request_context(
-            "/api/upload", method="POST",
-            data={"file": file_obj},
-            content_type="multipart/form-data"
-        ):
-            resp, code = upload()
-    mp4.unlink()
-    return resp  # JSON dict from upload()
+# Publish message function
+def publish(client, msg):
+    time.sleep(1)
+    result = client.publish(topic, msg)
+    # result: [0, 1]
+    status = result[0]
+    if status == 0:
+        print(f"Send `{msg}` to topic `{topic}`")
+    else:
+        print(f"Failed to send message to topic {topic}")
+
 
 # ---------- config ----------
 BASE_DIR        = Path(__file__).resolve().parent
@@ -83,15 +84,22 @@ class Video(db.Model):
 def gallery():
     return render_template("gallery.html")
 
-# control / record page you uploaded
-@app.route("/control")
-def control():
-    return render_template("front_page.html")   # your uploaded layout
+
 
 # one‑tap record page
 @app.route("/record")
 def record_page():
     return render_template("front_page.html")
+
+@app.route('/direction/<string:direction>', methods=['GET'])
+def drive(direction):
+    client = connect_mqtt()
+    client.loop_start()
+    publish(client, direction)
+    client.loop_stop()
+    return redirect(url_for('record_page'))
+
+
 
 @app.route("/api/upload", methods=["POST"])
 def upload():
@@ -121,13 +129,40 @@ def list_videos():
     return jsonify([v.as_dict() for v in vids])
 
 @app.route("/api/record", methods=["POST"])
-def record_api():
-    try:
-        new_clip = record_and_upload()   # JSON dict
-        return new_clip, 201
-    except Exception as e:
-        app.logger.exception("record failed")
-        return {"error": str(e)}, 500
+def start_record():
+    client = connect_mqtt()
+    client.loop_start()
+    publish(client, "RECORD")
+    client.loop_stop()
+    return "", 204
+
+@app.route("/api/stop-record", methods=["POST"])
+def stop_record():
+    client = connect_mqtt()
+    client.loop_start()
+    publish(client, "STOP_RECORD")
+    client.loop_stop()
+    return "", 204
+
+# ── TRACKING ENDPOINTS ───────────────────────────────────────────
+
+@app.route("/api/track", methods=["POST"])
+def start_track():
+    client = connect_mqtt()
+    client.loop_start()
+    publish(client, "TRACKING")
+    client.loop_stop()
+    return "", 204
+
+@app.route("/api/stop-track", methods=["POST"])
+def stop_track():
+    client = connect_mqtt()
+    client.loop_start()
+    publish(client, "STOP_TRACKING")
+    client.loop_stop()
+    return "", 204
+
+
 
 
 def _send_range(path, mime):
@@ -176,6 +211,29 @@ def download(slug):
                      mimetype=v.mime,
                      as_attachment=True,
                      download_name=v.orig_name)
+
+
+# … other imports …
+
+@app.route("/api/video/<slug>", methods=["DELETE"])
+def delete_video(slug):
+    # Lookup or 404
+    v = Video.query.filter_by(slug=slug).first_or_404()
+
+    # Delete the file from disk
+    path = UPLOAD_DIR / f"{slug}{Path(v.orig_name).suffix}"
+    try:
+        os.remove(path)
+    except OSError:
+        pass  # if for some reason it's already gone
+
+    # Delete the database record
+    db.session.delete(v)
+    db.session.commit()
+
+    # Return no content
+    return "", 204
+
 
 # ---------- one‑time init ----------
 if __name__ == "__main__":

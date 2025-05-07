@@ -1,0 +1,152 @@
+
+
+#controls{
+ 
+    position:fixed;
+    left:1rem;            
+    bottom:1rem;             
+    z-index:1000;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.8rem;
+}
+
+
+
+#controls > div{
+    display:flex;
+    flex-direction:column;          /* stack sub‑rows */
+    align-items:center;
+    gap:0.8rem;
+}
+
+
+#controls form{
+    margin:0;                       
+}
+
+
+#controls button{
+    min-width:80px;
+    padding:.5rem 1rem;
+    font-size:1rem;
+    border:0;
+    border-radius:8px;
+    background:#1976d2;             
+    color:#fff;
+    box-shadow:0 2px 6px #0003;
+    cursor:pointer;
+}
+#controls button:active{
+    transform:scale(.97);
+}
+
+/* active-state glow */
+button.active {
+    background: #388e3c !important;
+    box-shadow: 0 0 8px 2px #8bc34a !important;
+    color: #fff !important;
+  }
+
+  
+
+  
+/* ================= PORTRAIT‑ONLY ROTATION ===================== */
+
+@media (min-width:600px){
+  #controls{
+     position:static;              
+  }
+}
+
+
+
+
+@media (orientation:portrait){
+h1 {
+    transform: rotate(90deg);
+    position:fixed;
+right:-2rem;
+top: 20rem; 
+
+padding:.4rem 1rem;
+border-radius:9999px;
+background:#1976d2;
+color:#fff;
+font-size:.9rem;
+
+box-shadow:0 4px 7px #0003;
+}
+
+  #record-tracking{
+    margin: 20px;
+    transform: rotate(90deg);
+    text-align:center;
+
+    position:fixed;
+    right:-50px;
+    bottom: 5rem; 
+    
+    
+    border-radius:9999px;
+    background:#1976d2;
+    color:#fff;
+    font-size:.9rem;
+    text-decoration:none;
+    box-shadow:0 2px 6px #0003; 
+  }
+
+  
+#galleryBtn{
+    transform: rotate(90deg);
+    position:fixed;
+    right:0rem;
+    top: 3rem; 
+    padding:.3rem 1rem;
+    border-radius:9999px;
+    background:#1976d2;
+    font-size:.9rem;
+    box-shadow:0 2px 6px #0003;
+    color: #fff;            
+    text-decoration: none;  
+    display: inline-block;  
+}
+
+  
+  #galleryBtn a {
+    text-decoration: none;  /* kill the underline */
+  }
+  
+ 
+  
+
+    
+    #controls > div{
+        transform: rotate(90deg);
+        transform-origin:center;
+    }
+  
+    /* because we rotated the whole block, its internal spacing flips; */
+    #up{
+        position:fixed;
+        top: -4rem;
+        right:22rem;
+        
+    }
+    #down{
+        right:22rem;
+        position:fixed;
+    }
+
+  
+    
+    #controls > div:last-child{
+        margin-left:1.2rem;
+        margin-bottom:1.2rem;
+    }
+  }
+  
+     /* =============================================================== */       
+

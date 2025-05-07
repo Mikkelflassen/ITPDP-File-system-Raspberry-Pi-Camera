@@ -1,13 +1,24 @@
 {% extends "base.html" %}
 
 {% block head %}
+<link rel="stylesheet" href="/static/main.css">
+
+<script defer src="{{ url_for('static', filename='/main.js') }}"></script>
 {% endblock %}
 
 {% block body %}
 <div class="hero">
     <h1> Control page </h1>
-    <div id="controls" style="width: 200px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 30px;">
+    <div id="controls" >
         <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div id="up">
+                <form action="/direction/U" method="get"> <button type="submit"> Up </button> </form>
+            </div>
+            <div id="down">
+                <form action="/direction/D" method="get"> <button type="submit"> Down </button> </form>
+            </div>
+        </div>
+        <div >
             <div>
                 <form action="/direction/F" method="get"> <button type="submit"> Forward </button> </form>
             </div>
@@ -23,47 +34,25 @@
                 <form action="/direction/B" method="get"> <button type="submit"> Backwards </button> </form>
             </div>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-            <div>
-                <form action="/direction/U" method="get"> <button type="submit"> Up </button> </form>
-            </div>
-            <div>
-                <form action="/direction/D" method="get"> <button type="submit"> Down </button> </form>
-            </div>
-        </div>
+        
     </div>
 </div>
+
+    <!-- ===== BACK‑TO‑GALLERY BUTTON =============================== -->
+
+<a id="galleryBtn" href="{{ url_for('gallery') }}">← Gallery</a>
+<!-- ============================================================ -->
+
 <!-- ====== RECORD SECTION ====================================== -->
-<div style="margin-top:2rem;text-align:center">
-    <button id="recBtn"
-            style="font-size:1.5rem;width:120px;height:120px;border-radius:50%;
-                   background:#d22;color:#fff;border:0;box-shadow:0 3px 8px #0004">
-        ●
-    </button>
-    <p id="recMsg" style="margin:.8rem 0 0;font-weight:500"></p>
+
+    <p id="recMsg" ></p>
+
+  <div id=record-tracking > 
+    <button id="btnTrack">TRACKING</button>
+    <button id="btnRecord">RECORD</button>
   </div>
+
   
-  <script>
-  (()=>{                        // IIFE so we don't leak vars
-   const API  = location.origin + '/api';
-   const btn  = document.getElementById('recBtn');
-   const msg  = document.getElementById('recMsg');
-  
-   btn.onclick = async ()=>{
-     btn.disabled = true; msg.textContent = "Recording…";
-     try{
-       const r = await fetch(API+'/record', {method:'POST'});
-       if(!r.ok) throw new Error(await r.text());
-       msg.textContent = "Uploaded! Opening gallery…";
-       setTimeout(()=>location.href='/', 1200);          // go to gallery
-     }catch(e){
-       console.error(e);
-       msg.textContent = "Failed: " + e.message;
-       btn.disabled = false;
-     }
-   };
-  })();
-  </script>
   <!-- ============================================================ -->
   
 {% endblock %}

@@ -37,10 +37,6 @@ def publish(client, msg):
 # Flask setup
 app = Flask(__name__)
 
-# Routes below
-@app.route('/')
-def index():
-    return render_template('front_page.html')
 
 @app.route('/direction/<string:direction>', methods=['GET'])
 def drive(direction):
