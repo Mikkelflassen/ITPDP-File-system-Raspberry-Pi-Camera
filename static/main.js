@@ -1,44 +1,53 @@
+// static/js/gallery.js
 
-
-const recordBtn = document.getElementById("btnRecord");
-const trackBtn = document.getElementById("btnTrack");
-let recording = false;
-let tracking = false;
 document.addEventListener('DOMContentLoaded', () => {
-  recording = localStorage.getItem("recording");
-  tracking = localStorage.getItem("tracking")
+  const recordBtn = document.getElementById("btnRecord");
+  const trackBtn = document.getElementById("btnTrack");
+
+  // ── 1) Page-load init from localStorage ────────────────────────
+  let recording = localStorage.getItem("recording") === "true";
+  let tracking = localStorage.getItem("tracking") === "true";
+
+  // apply the active class if needed
+  recordBtn.classList.toggle("active", recording);
+  trackBtn.classList.toggle("active", tracking);
+
+  // ── 2) toggle helper ──────────────────────────────────────────
+  async function toggle(btn, flag, onPath, offPath, storageKey) {
+    btn.disabled = true;
+    const url = flag ? offPath : onPath;
+    try {
+      const res = await fetch(url, { method: "POST" });
+      if (!res.ok) throw new Error(res.statusText);
+      flag = !flag;
+      localStorage.setItem(storageKey, flag);
+      btn.classList.toggle("active", flag);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      btn.disabled = false;
+    }
+    return flag;
+  }
+
+  // ── 3) Button click handlers ───────────────────────────────────
+  recordBtn.onclick = async () => {
+    recording = await toggle(
+      recordBtn,
+      recording,
+      "/api/record",
+      "/api/stop-record",
+      "recording"
+    );
+  };
+
+  trackBtn.onclick = async () => {
+    tracking = await toggle(
+      trackBtn,
+      tracking,
+      "/api/track",
+      "/api/stop-track",
+      "tracking"
+    );
+  };
 });
-
-console.log(localStorage.getItem("recording"))
-recordBtn.onclick = async () => {
-  recordBtn.disabled = true;
-  const url = recording ? "/api/stop-record" : "/api/record";
-  try {
-    const res = await fetch(url, { method: "POST" });
-    if (!res.ok) throw new Error(res.statusText);
-    recording = !recording;
-    localStorage.setItem("recording", recording);
-    recordBtn.classList.toggle("active", recording);
-  } catch (e) {
-    console.error("Record error:", e);
-  } finally {
-    recordBtn.disabled = false;
-  }
-};
-
-trackBtn.onclick = async () => {
-  trackBtn.disabled = true;
-  const url = tracking ? "/api/stop-track" : "/api/track";
-  try {
-    const res = await fetch(url, { method: "POST" });
-    if (!res.ok) throw new Error(res.statusText);
-    tracking = !tracking;
-    localStorage.setItem("tracking", tracking);
-    trackBtn.classList.toggle("active", tracking);
-  } catch (e) {
-    console.error("Track error:", e);
-  } finally {
-    trackBtn.disabled = false;
-  }
-};
-
