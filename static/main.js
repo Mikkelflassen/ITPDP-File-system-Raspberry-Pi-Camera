@@ -1,10 +1,10 @@
-// static/js/gallery.js
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const recordBtn = document.getElementById("btnRecord");
   const trackBtn = document.getElementById("btnTrack");
 
-  // ── 1) Page-load init from localStorage ────────────────────────
+  // Page-load init from localStorage
   let recording = localStorage.getItem("recording") === "true";
   let tracking = localStorage.getItem("tracking") === "true";
 
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   recordBtn.classList.toggle("active", recording);
   trackBtn.classList.toggle("active", tracking);
 
-  // ── 2) toggle helper ──────────────────────────────────────────
+
   async function toggle(btn, flag, onPath, offPath, storageKey) {
     btn.disabled = true;
     const url = flag ? offPath : onPath;
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return flag;
   }
 
-  // ── 3) Button click handlers ───────────────────────────────────
+
   recordBtn.onclick = async () => {
     recording = await toggle(
       recordBtn,

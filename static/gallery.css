@@ -10,16 +10,21 @@ h2{
     padding:var(--gap)
 }
 
+#delBtn {
+    background:#e53935;
+    color:#fff;
+}
+
 #grid{
     display:grid;
     gap:var(--gap);
     padding:var(--gap)
 }
-/* first item spans full width */
+
 #grid > div:first-child{
     grid-column:1/-1
 }
-
+/* Phone view */
 @media(min-width:300px){
   #grid{
     grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}

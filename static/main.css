@@ -13,11 +13,21 @@
     gap:0.8rem;
 }
 
+#horisontal{
+ display: flex;
+  flex-direction: column; 
+  align-items: center; 
+  gap: 10px;}
+
+  #vertical {
+  display: flex; 
+  flex-direction: row;
+   gap: 10px;}
 
 
 #controls > div{
     display:flex;
-    flex-direction:column;          /* stack sub‑rows */
+    flex-direction:column;          
     align-items:center;
     gap:0.8rem;
 }
@@ -53,7 +63,7 @@ button.active {
   
 
   
-/* ================= PORTRAIT‑ONLY ROTATION ===================== */
+
 
 @media (min-width:600px){
   #controls{
@@ -62,7 +72,7 @@ button.active {
 }
 
 
-
+/* PORTRAIT‑ONLY ROTATION  */
 
 @media (orientation:portrait){
 h1 {
@@ -116,7 +126,7 @@ box-shadow:0 4px 7px #0003;
 
   
   #galleryBtn a {
-    text-decoration: none;  /* kill the underline */
+    text-decoration: none; 
   }
   
  
@@ -148,5 +158,5 @@ box-shadow:0 4px 7px #0003;
     }
   }
   
-     /* =============================================================== */       
+         
 

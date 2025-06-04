@@ -10,7 +10,7 @@
 <div class="hero">
     <h1> Control page </h1>
     <div id="controls" >
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div id="horisontal">
             <div id="up">
                 <form action="/api/direction/U" method="get"> <button type="submit"> Up </button> </form>
             </div>
@@ -22,7 +22,7 @@
             <div>
                 <form action="/api/direction/F" method="get"> <button type="submit"> Forward </button> </form>
             </div>
-            <div style="display: flex; flex-direction: row; gap: 10px;">
+            <div id="vertical">
                 <div>
                 <form action="/api/direction/L" method="get"> <button type="submit"> Left </button> </form>
             </div>
@@ -38,12 +38,12 @@
     </div>
 </div>
 
-<!-- ===== BACK‑TO‑GALLERY BUTTON =============================== -->
+<!-- gallery button  -->
 
 <a id="galleryBtn" href="{{ url_for('gallery') }}">← Gallery</a>
-<!-- ============================================================ -->
+<!-- -->
 
-<!-- ====== RECORD SECTION ====================================== -->
+<!-- Record button-->
 
     <p id="recMsg" ></p>
 
@@ -53,6 +53,5 @@
   </div>
 
   
-  <!-- ============================================================ -->
   
 {% endblock %}

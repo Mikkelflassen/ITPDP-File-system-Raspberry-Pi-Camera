@@ -1,4 +1,4 @@
-// static/js/gallery.js
+
 
 const API = location.origin + '/api';
 let videos = [];
@@ -16,7 +16,7 @@ async function loadVideos() {
   }
 }
 
-// 2) Build the gallery grid (no inline delete buttons here)
+// 2) Build the gallery grid
 function render() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -42,14 +42,13 @@ function render() {
   });
 }
 
-// 3) Preview dialog helpers
+
 
 function openDlg(v) {
-  // show the dialog
   const dlg = document.getElementById('dlg');
   dlg.classList.add('open');
 
-  // populate video, title, download link
+  // Context for the video, title, download link
   document.getElementById('dlgVid').src = `${API}/video/${v.slug}/stream`;
   const t = document.getElementById('dlgTitle');
   t.value = v.title || '';
@@ -58,10 +57,9 @@ function openDlg(v) {
   dl.href = `${API}/video/${v.slug}/download`;
   dl.download = v.orig_name;
 
-  // wire Save Title (existing)
-  // note: saveTitle() already reads t.dataset.slug and updates videos[] + re-renders
 
-  // wire Delete button inside dialog
+
+  //  Delete button inside dialog
   const delBtn = document.getElementById('delBtn');
   delBtn.onclick = async () => {
     if (!confirm("Are you sure you want to delete this video?")) {
@@ -73,7 +71,6 @@ function openDlg(v) {
       });
       if (!res.ok) throw new Error(res.statusText);
 
-      // remove from local array + re-render
       videos = videos.filter(x => x.slug !== v.slug);
       render();
 
@@ -96,14 +93,14 @@ function saveTitle() {
   const t = document.getElementById('dlgTitle');
   fetch(`${API}/video/${t.dataset.slug}/title`, {
     method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({title: t.value})
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: t.value })
   })
     .then(r => r.ok ? r.json() : Promise.reject(r))
     .then(updated => {
       videos = videos.map(v => v.slug === updated.slug ? updated : v);
       render();
-      closeDlg({target:{id:'dlg'}});
+      closeDlg({ target: { id: 'dlg' } });
     })
     .catch(err => {
       console.error("Title save failed:", err);

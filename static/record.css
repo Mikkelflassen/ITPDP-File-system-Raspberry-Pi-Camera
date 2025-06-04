@@ -1,0 +1,25 @@
+.record-title {
+    text-align: center;
+  }
+  
+  .record-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+  
+  .record-button {
+    font-size: 2rem;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #d22;
+    color: #fff;
+    border: 0;
+  }
+  
+  .record-message {
+    text-align: center;
+    margin-top: 1rem;
+  }
+  
